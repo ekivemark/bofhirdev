@@ -9,7 +9,7 @@
         <ul class="breadcrumb">
             <li><a href="{% url 'home' %}">Home</a></li>
             <li><a href="{% url 'accounts:manage_account' %}">Dashboard</a></li>
-            <li><a href="{% url 'appmgmt:organization_view' %}">MyOrganization</a></li>
+            <li><a href="{% url 'appmgmt:organization_view' %}">Organization</a></li>
             <li class="active">My Applications</li>
         </ul>
     </div>
@@ -28,16 +28,49 @@
                     <i class="fa fa-pencil-square-o fa-1x"></i>
                 {% trans 'Edit' %}</a>
             </h2>
-            <li>Owner: {{ request.user }}
-            </li>
-            <li>Terms Agreed:
-                {% if application.agree %}YES&nbsp;
+            <table>
+                <tr>
+                    <td>
+                        Owner:
+                    </td>
+                    <td>
+                        {{ request.user }}
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        About this application:&nbsp;&nbsp;
+                    </td>
+                    <td>
+                        {{ application.about }}
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Terms Agreed:
+                    </td>
+                    <td>
+                        {% if application.agree %}YES&nbsp;
                 (Version: {%  if application.agree_version %}:
                     {{ application.agree_date }}{% endif %})
-                {% else %}no
-                {% endif %}
-            <li>
-                Client_Id: <div
+                        {% else %}no
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Redirect URL(s):
+                    </td>
+                    <td>
+                        {{ application.redirect_uris }}
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Client_Id:
+                    </td>
+                    <td>
+                        <div
 style="width:660px;
 min-height:19px;
 height:auto!important;
@@ -45,10 +78,16 @@ color:darkred; padding: 1%; background-color: ivory;
 font-size: 18px;
 font-weight: normal;
 word-wrap: break-word;
-text-align: left" >{{ application.client_id }}</div>
-            </li>
-            <li>
-                Client Secret: <div
+text-align: left" >{{ application.client_id }}
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Client Secret:
+                    </td>
+                    <td>
+                        <div
 style="width:600px;
 min-height:19px;
 height:auto!important;
@@ -56,11 +95,11 @@ color:darkgreen; padding: 1%; background-color: ivory;
 font-size: 18px;
 font-weight: normal;
 word-wrap: break-word;
-text-align: left" >{{ application.client_secret }}</div>
-            </li>
-            <li>
-                Redirect URL(s): {{ application.redirect_uris }}
-            </li>
+text-align: left" >{{ application.client_secret }}
+                        </div>
+                    </td>
+                </tr>
+            </table>
 
         </div>
     {%  endfor %}

@@ -10,7 +10,7 @@
             <li><a href="{% url 'home' %}">Home</a></li>
             <li><a href="{% url 'accounts:manage_account' %}">Dashboard</a></li>
 
-            <li class="active">My Organization</li>
+            <li class="active">Organization</li>
 
         </ul>
     </div>
@@ -26,22 +26,72 @@
                    class="btn btn-success">
                     <i class="fa fa-pencil-square-o fa-1x"></i> {% trans 'Edit' %}</a>
             </h2>
-            <li>Owner: {{ request.user }}</li>
-            <li>Domain: {{ organization.domain }}</li>
-            <li>Trusted:
-                {% if organization.trusted %}YES
-                {% else %}no
-                {% endif %}</li>
-            {% if organization.trusted %}
-                <li>Trusted Until: {%  if organization.trusted_until %}
-                    {{ organization.trusted_until }}{% endif %}</li>
-            {% endif %}
+            <table>
+                <tr>
+                    <td>
+                        Owner:
+                    </td>
+                    <td>
+                        {{ request.user }} / {{ organization.owner }}
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Domain:
+                    </td>
+                    <td>
+                        {{ organization.domain }}
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Trusted:
+                    </td>
+                    <td>
+                        {% if organization.trusted %}YES
+                        {% else %}no
+                        {% endif %}
 
-            <li>Developer: {{ organization.developers }}</li>
+                    </td>
+                </tr>
+                {% if organization.trusted %}
+                    <tr>
+                        <td>
+                            Trusted Until:&nbsp;&nbsp;
+                        </td>
+                        <td>
+                            {%  if organization.trusted_until %}
+                                {{ organization.trusted_until }}
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endif %}
+                <tr>
+                    <td>
+                        Developers:
+                    </td>
+                    <td>
+                        {{ organization.developers }}
+                    </td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td>
+                        {% for developer in organization.developers.all %}
+                            {% for user in developer %}
+                                email:{{ user.email }}<br/>
+                            {% endfor %}
+                        {% endfor %}
+                    </td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td>&nbsp;</td>
+                </tr>
 
-            {% for developer in organization.developers.all %}
-                {% for user in developer %}email:{{ user.email }} {% endfor %}
-            {% endfor %}
+            </table>
+
+
             <div class="col-lg-12">
                 {% if organization.trusted %}
                     <a href="{% url "appmgmt:application_view" %}"

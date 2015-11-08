@@ -12,7 +12,10 @@
             <li><a href="{% url 'home' %}">Home</a></li>
             <li><a href="{% url 'accounts:manage_account' %}">Dashboard</a></li>
 
-            <li><a href="{% url 'appmgmt:application_view' %}" >MyApplication</a></li>
+            <li><a href="{% url 'appmgmt:organization_view' %}" >My Organization</a></li>
+            <li><a href="{% url 'appmgmt:application_view' %}" >Application</a></li>
+
+            <li class="active">Edit Application</li>
 
         </ul>
     </div>
@@ -27,37 +30,45 @@
             <table>
                 <tr>
                     <td>
-                        {{ form.as_p }}
+                        {{ form.as_table }}
 
-
-
+                    </td>
+                <tr>
+                    <td>
+                        <input class="btn-success btn-lg" type="submit"
+                               value="Save"/>
+                    </td>
+                    <td>
                         <a href="{% url "appmgmt:application_view" %}"><input
                                 type="button" class="btn-danger"
                                 value="Cancel"/></a>
-
-                        <input class="btn-success btn-lg" type="submit"
-                               value="Save"/>
                     </td>
                 </tr>
             </table>
         </form>
     </div>
-    <h3>Other Fields</h3>
+    <h4>Other Fields</h4>
     <div class="container col-lg-10 well">
 
         <table>
-        <tr>
-
-        </tr>
-                       <tr>Terms Agreed:
-                {% if application.agree %}YES&nbsp;
-                (Version: {%  if application.agree_version %}:
-                    {{ application.agree_date }}{% endif %})
-                {% else %}no
-                {% endif %}
+            <tr>
+                <td>Terms Agreed:&nbsp;&nbsp;  </td>
+                <td>
+                    {% if application.agree %}YES&nbsp;
+                        (Version:
+                            {%  if application.agree_version %}:
+                        {{ application.agree_date }}
+                            {% endif %})
+                    {% else %}no
+                    {% endif %}
+                </td>
             </tr>
             <tr>
-                Client_Id: <div
+                <td>
+                    Client_Id:
+                </td>
+                <td>
+                    <div
 style="width:660px;
 min-height:19px;
 height:auto!important;
@@ -65,10 +76,16 @@ color:darkred; padding: 1%; background-color: ivory;
 font-size: 18px;
 font-weight: normal;
 word-wrap: break-word;
-text-align: left" >{{ application.client_id }}</div>
+text-align: left" >{{ application.client_id }}
+                    </div>
+                </td>
             </tr>
             <tr>
-                Client Secret: <div
+                <td>
+                Client Secret:
+                </td>
+                <td>
+                    <div
 style="width:600px;
 min-height:19px;
 height:auto!important;
@@ -76,12 +93,10 @@ color:darkgreen; padding: 1%; background-color: ivory;
 font-size: 18px;
 font-weight: normal;
 word-wrap: break-word;
-text-align: left" >{{ application.client_secret }}</div>
+text-align: left" >{{ application.client_secret }}
+                    </div>
+                </td>
             </tr>
-            <tr>
-                Redirect URL(s): {{ application.redirect_uris }}
-            </tr>
-
 
         </table>
 

@@ -46,7 +46,10 @@ class MyApplicationUpdateView(UpdateView):
 
     """
     model = BBApplication
-    fields = ['logo', 'privacy_url', 'support_url' ]
+    fields = ['name', 'about',
+              'privacy_url', 'support_url',
+              'redirect_uris' , 'client_type',
+              'logo',]
 
     context_object_name = "application"
 
@@ -67,7 +70,9 @@ class MyApplicationCreate(CreateView):
 
     model = BBApplication
     form_class = ApplicationForm
-    fields = ['name', 'logo', 'privacy_url', 'support_url', 'redirect_url']
+    fields = ['name', 'about',
+              'logo', 'privacy_url', 'support_url',
+              'redirect_uris', 'client_type']
 
     def get_initial(self):
         self.initial.update({ 'owner': self.request.user})

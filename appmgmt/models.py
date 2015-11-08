@@ -20,6 +20,8 @@ class BBApplication(AbstractApplication):
                               blank=True,
                               null=True)
     logo = models.ImageField(blank=True, null=True)
+    about = models.TextField(null=True,blank=True,
+                             verbose_name="About this app", editable=True)
     agree = models.BooleanField(verbose_name='Agreed to T&Cs',
                                 default=False)
     agree_version = models.CharField(max_length=10,
