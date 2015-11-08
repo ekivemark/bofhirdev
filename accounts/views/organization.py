@@ -62,7 +62,8 @@ def application_edit(request, pk):
                 print("Form is invalid")
 
             messages.error(request, "There was an input problem.")
-            return render(request, 'accounts/application_edit.html',
+            return render(request,
+                          'accounts/../../appmgmt/templates/appmgmt/application_edit.html',
                           {'form': form, 'application': a.name, })
 
     else:
@@ -76,6 +77,7 @@ def application_edit(request, pk):
                                              'skip_authorization': a.skip_authorization, })
         if settings.DEBUG:
             print("Not in the post in the get")
-        return render(request, 'accounts/application_edit.html',
+        return render(request,
+                      'accounts/../../appmgmt/templates/appmgmt/application_edit.html',
                       {'form': form,
                        'application': a.name})

@@ -7,6 +7,7 @@ Created: 6/21/15 8:31 PM
 """
 __author__ = 'Mark Scrimshire:@ekivemark'
 
+from django.conf import settings
 from django import forms
 from django.utils.safestring import mark_safe
 from registration.forms import (RegistrationFormUniqueEmail,
@@ -14,9 +15,10 @@ from registration.forms import (RegistrationFormUniqueEmail,
 
 from accounts.models import User
 
-
 class Email(forms.EmailField):
     def clean(self, value):
+        if settings.DEBUG:
+            print("email is ", value)
         value = value.lower()
         super(Email, self).clean(value)
         try:
@@ -24,6 +26,8 @@ class Email(forms.EmailField):
             raise forms.ValidationError(mark_safe(
                 "This email is already registered. <br/>Use <a href='/password/reset'>this forgot password</a> link or on the <a href ='/accounts/login?next=/'>login page</a>."))
         except User.DoesNotExist:
+            if settings.DEBUG:
+                print("no match on user:", value)
             return value
 
 
@@ -40,7 +44,28 @@ class UserRegistrationForm(forms.ModelForm):
     password2 = forms.CharField(widget=forms.PasswordInput(),
                                 label="Repeat your password")
 
-    fields = ['email', 'password1', 'password2' ]
+    fields = ['user', 'email', 'password1', 'password2' ]
+
+    def clean_user(self):
+        """
+        We need to check that user is not containing spaces.
+        We also need to make sure it is lower case
+
+        :return: self
+        """
+
+        data = self.cleaned_data['user']
+        # remove spaces
+        data = data.replace(" ", "")
+        # Convert to lowercase
+        data = data.lower()
+        if data == "":
+            raise forms.ValidationError("User name is required")
+
+        if settings.DEBUG:
+            print("User: ",  self.cleaned_data['user'], " = [",data, "]" )
+
+        return data
 
     def clean_password(self):
         if self.data['password1'] != self.data['password2']:
@@ -52,7 +77,15 @@ class RegistrationFormUserTOSAndEmail(UserRegistrationForm,
                                       RegistrationFormUniqueEmail,
                                       RegistrationFormTermsOfService,
                                       ):
-    pass
+
+    class Meta:
+        model = User
+        fields = ['user',
+                  'email',
+                  'first_name',
+                  'last_name']
+        # exclude = ['user']
+    # pass
 
 
 class RegistrationFormTOSAndEmail(

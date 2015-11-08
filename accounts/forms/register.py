@@ -9,6 +9,7 @@ Remember to add new classes to accounts.forms.__init__.py
 __author__ = 'Mark Scrimshire:@ekivemark'
 
 from django import forms
+from django.conf import settings
 
 from accounts.models import User
 
@@ -17,6 +18,7 @@ class RegistrationForm(forms.ModelForm):
     """
     Form for registering a new account.
     """
+    user = forms.CharField(label="Username")
     email = forms.EmailField(widget=forms.EmailInput, label="Email")
     password1 = forms.CharField(widget=forms.PasswordInput,
                                 label="Password")
@@ -33,7 +35,29 @@ class RegistrationForm(forms.ModelForm):
         model = User
         fields = ['email',
                   'password1', 'password2',
-                  'first_name', 'last_name']
+                  'first_name', 'last_name',
+                  'user']
+
+    def clean_user(self):
+        """
+        We need to check that user is not containing spaces.
+        We also need to make sure it is lower case
+
+        :return: self
+        """
+
+        data = self.cleaned_data['user']
+        # remove spaces
+        data = data.strip()
+        # Convert to lowercase
+        data = data.lower()
+        if data == "":
+            raise forms.ValidationError("User name is required")
+
+        if settings.DEBUG:
+            print("User: ",  self.cleaned_data['user'], " = [",data, "]" )
+
+        return data
 
     def clean(self):
         """
@@ -42,6 +66,7 @@ class RegistrationForm(forms.ModelForm):
         NOTE: Errors here will appear in ``non_field_errors()`` because it applies to more than one field.
         """
         cleaned_data = super(RegistrationForm, self).clean()
+
         if 'password1' in self.cleaned_data and 'password2' in self.cleaned_data:
             if self.cleaned_data['password1'] != self.cleaned_data[
                 'password2']:

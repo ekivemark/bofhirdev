@@ -1,19 +1,10 @@
-BlueButton on FHIR User Account
-===========================
+BlueButton on FHIR Developer Account
+====================================
 
-This is the first iteration of a User/Beneficiary Account Framework for
+This is the Developer Account Framework for
 BlueButton on FHIR.
  
 This framework has been developed using Python 3.4 and Django 1.8. 
-
-The purpose of this application is to test an integration and authorization
-via an external LDAP Service.
-
-- Validate their account via email
-- Agree to Terms of Use
-- Manage their account
-- Manage OAuth Credentials for third party apps
-- Give access permission to third party apps.
 
 This version implements a Custom User model that uses email as username.
 Django-registration-redux is also implemented to issue email to complete 
@@ -33,10 +24,14 @@ The phone number format in the usermodel needs some refinement to allow
 relaxed number formatting. eg. allowing more than +12025551234 as an
  input format.
 
+On Mac OS X you need to have xcode command line tools installed.
+Install Using the following command: 
+xcode-select --install
+
 Setup:
 
 1. Configure local.ini
-2. run pip install -r bbonfhiruser/config/requirements.txt
+2. run pip install -r bofhirdev/config/requirements.txt
 3. python manage.py makemigrations
 4. python manage.py migrate
 5. python manage,py createsuperuser

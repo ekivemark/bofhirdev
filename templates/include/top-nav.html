@@ -27,11 +27,6 @@ Just to avoid confusion...
                    contenteditable="false" title="{{ settings.APPLICATION_TITLE }} Home">{{ settings.APPLICATION_TITLE }}<br>Home
                 </a>
             </li>
-            <li>
-                <a href="{% url 'api:home' %}" class=""
-                   contenteditable="false" title="BlueButton API Access"><i class="fa fa-bolt"></i> API
-                </a>
-            </li>
             {% comment %}<li>
                 {# DONE: create /accounts/app_management - redirect to accounts:manage_account #}
                 <a href="{% url 'accounts:manage_account' %}">
@@ -56,9 +51,6 @@ Just to avoid confusion...
                         <li>
                             <a href="{% url 'about' %}" title="About {{ settings.APPLICATION_TITLE }}">{% trans "About" %}</a>
                         </li>
-                        <li>
-                            <a href="{% url 'whatsnew' %}" title="What's New">{% trans "What's New" %}</a>
-                        </li>
                     </ul>
                 </li>
 
@@ -72,17 +64,7 @@ Just to avoid confusion...
                     {# TODO: Create /accounts/documentation page  #}
                     <li><a href="/api/documentation" class="">Documentation</a>
                     </li>
-                    {# TODO: /accounts/support page  #}
-                    <li><a href="/api/support" class="">Support</a>
-                    </li>
-                    <li class="divider"></li>
-                    <li>
-                        <a href="{% url 'api:home' %}" class=""
-                                contenteditable="false">API
-                        </a>
-
-                    </li>
-                    {# DONE: /admin access page  #}
+                     {# DONE: /admin access page  #}
                     {% if user.is_admin and request.session.auth_master%}
                         <li class="divider"></li>
                         <li><a href="/admin" class="">Admin</a></li>

@@ -8,6 +8,7 @@ Remember to add new classes to accounts.forms.__init__.py
 
 """
 __author__ = 'Mark Scrimshire:@ekivemark'
+
 from django import forms
 from django.conf import settings
 
@@ -18,32 +19,37 @@ class AuthenticationForm(forms.Form):
     """
     Login form
     """
-    email = forms.EmailField(widget=forms.widgets.TextInput)
+    user = forms.CharField(label="Username")
+    #email = forms.EmailField(widget=forms.widgets.TextInput)
     password = forms.CharField(widget=forms.widgets.PasswordInput)
     sms_code = forms.CharField(widget=forms.PasswordInput,
-                               max_length=5,
+                               max_length=settings.SMS_CODE_LENGTH,
                                label="SMS Code",
                                required=False)
 
     class Meta:
-        fields = ['email', 'password', 'sms_code']
+        fields = [settings.USERNAME_FIELD, 'password', 'sms_code']
 
 
 class SMSCodeForm(forms.Form):
-    email = forms.EmailField(widget=forms.widgets.TextInput,
-                             label="Enter your email address:",
-                             help_text="Your email address is used as the username for your account. "
-                                       "We will ask for your password in the next step.")
+
+    user = forms.CharField(label='Enter your user name',
+                               help_text="We will ask for your password in the next step.")
+    # email = forms.EmailField(widget=forms.widgets.TextInput,
+    #                          label="Enter your email address:",
+    #                          help_text="Your email address is used as the username for your account. "
+    #                                    "We will ask for your password in the next step.")
 
 
 class AuthenticationSMSForm(forms.Form):
     """
     Login form
     """
-    email = forms.EmailField(widget=forms.widgets.TextInput)
+    user = forms.CharField(label='Username',)
+    #email = forms.EmailField(widget=forms.widgets.TextInput)
     password = forms.CharField(widget=forms.widgets.PasswordInput)
     sms_code = forms.CharField(widget=forms.PasswordInput,
-                               max_length=5,
+                               max_length=settings.SMS_CODE_LENGTH,
                                label="SMS Code",
                                required=False)
     send_pin = forms.BooleanField(required=False, widget=forms.HiddenInput
@@ -54,7 +60,11 @@ class AuthenticationSMSForm(forms.Form):
 
     def clean(self):
         cleaned_data = super(AuthenticationSMSForm, self).clean()
-        u = User.objects.get(email=self.cleaned_data['email'])
+        if settings.USERNAME_FIELD == "email":
+            u = User.objects.get(email=self.cleaned_data[settings.USERNAME_FIELD])
+        else:
+            u = User.objects.get(user=self.cleaned_data[settings.USERNAME_FIELD])
+
         mfa = u.mfa
         if settings.DEBUG:
             print(self.cleaned_data)

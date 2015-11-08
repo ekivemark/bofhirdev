@@ -7,7 +7,7 @@ from django.contrib.auth.forms import ReadOnlyPasswordHashField
 # Register your models here.
 from accounts.models import (User,
                              ValidSMSCode,
-                             Application,
+                             # Application,
                              Crosswalk)
 
 
@@ -30,7 +30,7 @@ class UserCreationForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ('email', 'first_name', 'last_name')
+        fields = ('user', 'email', 'first_name', 'last_name')
 
     def clean_password2(self):
         # Check that the two password entries match
@@ -59,7 +59,7 @@ class UserChangeForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ('email', 'password', 'first_name', 'last_name',
+        fields = ('user', 'email', 'password', 'first_name', 'last_name',
                   'is_active', 'is_admin', 'is_staff', 'notify_activity')
 
     def clean_password(self):
@@ -77,10 +77,10 @@ class UserAdmin(UserAdmin):
     # The fields to be used in displaying the User model.
     # These override the definitions on the base UserAdmin
     # that reference specific fields on auth.User.
-    list_display = ('email', 'first_name', 'last_name', 'is_admin')
+    list_display = ('user', 'email', 'first_name', 'last_name', 'is_admin')
     list_filter = ('is_admin',)
     fieldsets = (
-        (None, {'fields': ('email', 'password')}),
+        (None, {'fields': ('user', 'email', 'password')}),
         ('Personal info', {'fields': ('first_name',
                                       'last_name',
                                       'mobile',
@@ -100,7 +100,7 @@ class UserAdmin(UserAdmin):
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('email', 'password1', 'password2')}
+            'fields': ('user', 'email', 'password1', 'password2')}
          ),
     )
     search_fields = ('email',)
@@ -108,17 +108,17 @@ class UserAdmin(UserAdmin):
     filter_horizontal = ()
 
 
-class ApplicationAdmin(admin.ModelAdmin):
-    """
-    Tailor the Application page in the main Admin module
-    """
-    # DONE: Add Admin view for applications
-    list_display = ('name', 'user')
+# class ApplicationAdmin(admin.ModelAdmin):
+#     """
+#     Tailor the Application page in the main Admin module
+#     """
+#     # DONE: Add Admin view for applications
+#     list_display = ('name', 'user')
 
 
 # admin.site.register(Account)
 admin.site.register(User, UserAdmin)
-admin.site.register(Application, ApplicationAdmin)
+# admin.site.register(Application, ApplicationAdmin)
 # admin.site.register(ApplicationKey)
 admin.site.register(ValidSMSCode)
 admin.site.register(Crosswalk)

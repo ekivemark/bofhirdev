@@ -30,11 +30,8 @@ from accounts.views.ldap import validate_ldap_user
 from accounts.models import (User,
                              ValidSMSCode)
 
-from apps.subacc.utils import (session_device,
-                               Master_Account)
 
-
-def validate_user(request, email):
+def validate_email(request, email):
     """
 
     :param request:
@@ -43,6 +40,56 @@ def validate_user(request, email):
     We will lookup the email address in LDAP and then find in accounts.user
     """
 
+    # step 1 is to look up email in LDAP
+
+    result = validate_ldap_user(request, email)
+    # Check the result for the mail field
+    # Compare to the email received
+
+    if settings.DEBUG:
+        print("ldap email check:", result)
+    # step 2 is to look up email in accounts.User
+
+    if result[:5] == "ERROR" and not "@" in result :
+        # There was a problem with reaching the LDAP Server
+        if settings.DEBUG:
+            print("ldap email returned error")
+        email_match = False
+
+    else:
+        print("LDAP Returned:", result)
+        # We got something back from LDAP so we check it for a match
+        if result.lower() == email.lower():
+            email_match = True
+        else:
+            email_match = False
+            # Set an error message
+            messages.error(request,
+                            mark_safe("Your email was not recognized. Do you need to "
+                                      "<a href='/registration/register/'>register</a>?"))
+
+    if settings.DEBUG:
+        print("Match?:", email_match)
+
+    return email_match
+
+
+def validate_user(request, user):
+    """
+
+    :param request:
+    :param username:
+    :return:
+    We will lookup the username, get the email address and then
+    lookup in LDAP and then find in accounts.user
+    """
+
+    # step 0 is to lookup username in user and get email
+    try:
+        u = User.objects.get(user=user)
+        email = u.email
+    except (User.DoesNotExist):
+        email = ""
     # step 1 is to look up email in LDAP
 
     result = validate_ldap_user(request, email)
@@ -108,8 +155,22 @@ def validate_sms(username, smscode):
 
     mfa_on = False
     try:
-        u = User.objects.get(email=username)
-        mfa_on = u.mfa
+        if settings.USERNAME_FIELD == "email":
+            u = User.objects.get(email=username)
+        else:
+            u = User.objects.get(user=username)
+
+        if settings.DEBUG:
+            print("found user:", u, " using ", username)
+    except(User.DoesNotExist):
+        if settings.DEBUG:
+            print("User does not exist")
+        return False
+
+    if settings.DEBUG:
+        print("Working with %s" % username, " and ", u)
+    mfa_on = u.mfa
+    try:
         vc = ValidSMSCode.objects.get(user=u, sms_code=smscode)
         if settings.DEBUG:
             print("vc: %s - %s" % (vc, mfa_on))
@@ -117,10 +178,6 @@ def validate_sms(username, smscode):
         if vc.expires < now:
             vc.delete()
             return False
-    except(User.DoesNotExist):
-        if settings.DEBUG:
-            print("User does not exist")
-        return False
     except(ValidSMSCode.DoesNotExist):
         if not mfa_on:
             if settings.DEBUG:
@@ -137,41 +194,53 @@ def validate_sms(username, smscode):
 
 
 def sms_login(request, *args, **kwargs):
-    if 'email' in request.session:
-        if request.session['email'] != "":
-            email = request.session['email']
+
+    # Step 2 of the login process.
+    if settings.USERNAME_FIELD in request.session:
+        if request.session[settings.USERNAME_FIELD] != "":
+            key_field = request.session[settings.USERNAME_FIELD]
         else:
-            email = ""
+            key_field = ""
     else:
-        email = ""
+        key_field = ""
     if settings.DEBUG:
         # print(request.GET)
-        print("SMS_LOGIN.GET:email:[%s]" % (email))
+        print("SMS_LOGIN.GET:%s:[%s]" % (settings.USERNAME_FIELD, key_field))
         # print(request.POST)
-        print(args)
+        print("args:", args)
 
     if request.method == 'POST':
         form = AuthenticationForm(request.POST)
         if request.POST['login'].lower() == 'resend code':
             if settings.DEBUG:
-                print("Resending Code for %s" % request.POST['email'])
+                print("Resending Code for %s" % request.POST[settings.USERNAME_FIELD])
             # form = SMSCodeForm(request.POST)
             # form.email = request.POST['email']
-            request.session['email'] = request.POST['email']
+            request.session[settings.USERNAME_FIELD] = request.POST[settings.USERNAME_FIELD]
             return HttpResponseRedirect(reverse('accounts:sms_code'))
         if form.is_valid():
-            # print("Authenticate")
-            email = form.cleaned_data['email'].lower()
+            print("Authenticating...")
+            key_field = form.cleaned_data[settings.USERNAME_FIELD].lower()
             password = form.cleaned_data['password'].lower()
             sms_code = form.cleaned_data['sms_code']
-            if not validate_sms(username=email, smscode=sms_code):
+            if settings.DEBUG:
+                print("working with ", key_field)
+            if not validate_sms(username=key_field, smscode=sms_code):
                 messages.error(request, "Invalid Access Code.")
+                if settings.DEBUG:
+                    print("Going to sms_login loop back")
                 return render_to_response('accounts/login.html',
                                           {'form': AuthenticationForm()},
                                           RequestContext(request))
             # DONE: Trying to handle LDAP Errors. eg. Not available
+            check = User.objects.get(user=key_field)
+            if settings.DEBUG:
+                print("checking with ", key_field, "/", check)
             try:
-                user = authenticate(username=email, password=password)
+                # user = authenticate(user=key_field, password=password)
+                user = authenticate(email=check.email, password=password)
+                if settings.DEBUG:
+                    print("Authenticated User:", user)
             except (ldap3.LDAPBindError,
                     ldap3.LDAPSASLPrepError,
                     ldap3.LDAPSocketOpenError):
@@ -183,6 +252,8 @@ def sms_login(request, *args, **kwargs):
                                       RequestContext(request))
 
             #######
+            if settings.DEBUG:
+                print("authentication with", user)
 
             if user is not None:
 
@@ -192,10 +263,11 @@ def sms_login(request, *args, **kwargs):
                     # DONE: Set a session variable to identify as
                     # master account and not a subacc
 
-                    session_device(request,
-                                   "True",
-                                   Session="auth_master")
+                    # session_device(request,
+                    #                "True",
+                    #                Session="auth_master")
                     # DONE: Now Send a message on login
+                    request.session['auth_master']= "True"
                     if user.notify_activity in "ET":
                         send_activity_message(request,
                                               user)
@@ -216,13 +288,13 @@ def sms_login(request, *args, **kwargs):
                                       {'form': form},
                                       RequestContext(request))
     else:
-        if 'email' in request.session:
-            email = request.session['email']
+        if settings.USERNAME_FIELD in request.session:
+            key_field = request.session[settings.USERNAME_FIELD]
         else:
-            email = ""
+            key_field = ""
         if settings.DEBUG:
-            print("in sms_login. Setting up Form [", email, "]")
-        form = AuthenticationForm(initial={'email': email, })
+            print("in sms_login. Setting up Form [", settings.USERNAME_FIELD, "]")
+        form = AuthenticationForm(initial={settings.USERNAME_FIELD: key_field, })
     if settings.DEBUG:
         # print(form)
         print("Dropping to render_to_response in sms_login")
@@ -231,46 +303,47 @@ def sms_login(request, *args, **kwargs):
 
 
 def sms_code(request):
-    if 'email' in request.session:
-        if request.session['email'] != "":
-            email = request.session['email']
+    if settings.USERNAME_FIELD in request.session:
+        if request.session[settings.USERNAME_FIELD] != "":
+            key_field = request.session[settings.USERNAME_FIELD]
         else:
-            email = ""
+            key_field = ""
     else:
-        email = ""
+        key_field = ""
     status = "NONE"
     if settings.DEBUG:
         print("in accounts.views.sms.sms_code")
 
     if request.method == 'POST':
-        if request.POST.__contains__('email'):
-            email = request.POST['email'].lower()
-            print("POST email on entry:[%s]" % (email))
+        if request.POST.__contains__(settings.USERNAME_FIELD):
+            key_field = request.POST[settings.USERNAME_FIELD].lower()
+            print("POST %s on entry:[%s]" % (settings.USERNAME_FIELD,
+                                             key_field))
         else:
-            if 'email' in request.session:
-                if request.session['email'] != "":
-                    email = request.session['email'].lower()
+            if settings.USERNAME_FIELD in request.session:
+                if request.session[settings.USERNAME_FIELD] != "":
+                    key_field = request.session[settings.USERNAME_FIELD].lower()
             else:
-                email = ""
+                key_field = ""
+
         if settings.DEBUG:
             #print("request.POST:%s" % request.POST)
-            print("email:%s" % email)
+            print("%s:%s" % (settings.USERNAME_FIELD, key_field))
 
         form = SMSCodeForm(request.POST)
 
         if form.is_valid():
-            if not validate_user(request, form.cleaned_data['email'].lower()):
-                request.session['email'] = ""
+            if not validate_user(request, form.cleaned_data[settings.USERNAME_FIELD].lower()):
+                request.session[settings.USERNAME_FIELD] = ""
                 # We had a problem
-                # Message error was set in validate_user function
-                status = "Email UnRecognized"
+                # Message error was set in validate_username function
+                status = settings.USERNAME_FIELD + " not recognized"
                 return HttpResponseRedirect(reverse('accounts:sms_code'))
             else:
                 if settings.DEBUG:
-                    print("Valid form with a valid email")
-                # True if email found in LDAP
+                    print("Valid form wih valid ", settings.USERNAME_FIELD)
                 try:
-                    u = User.objects.get(email=form.cleaned_data['email'].lower())
+                    u = User.objects.get(user=form.cleaned_data[settings.USERNAME_FIELD].lower())
                     if settings.DEBUG:
                         print("returned u:", u)
                     # u=User.objects.get(email=form.cleaned_data['email'].lower())
@@ -280,7 +353,13 @@ def sms_code(request):
                         print("Require MFA Login:%s" % mfa_required)
                     if u.is_active:
                         # posting a session variable for login page
-                        request.session['email'] = email
+                        if settings.USERNAME_FIELD == "user":
+                            request.session[settings.USERNAME_FIELD] = u.user
+                            key_field = u.user
+                        elif settings.USERNAME_FIELD == "email":
+                            request.session[settings.USERNAME_FIELD] = u.email
+                            key_field = u.email
+
                         if mfa_required:
                             trigger = ValidSMSCode.objects.create(user=u)
                             if str(trigger.send_outcome).lower() != "fail":
@@ -298,7 +377,7 @@ def sms_code(request):
                                              "Your account is active. Continue Login.")
                             status = "Account Active"
                     else:
-                        request.session['email'] = ""
+                        request.session[settings.USERNAME_FIELD] = ""
                         messages.error(request,
                                        mark_safe("Your account is inactive. If you recently registered to use BlueButton"
                                        "\nplease check your email for an activation link."))
@@ -315,9 +394,9 @@ def sms_code(request):
                                                      "\nBut not registered for BlueButton."
                                                      " \nPlease complete the <a href='/registration/register/'>BlueButton Registration</a>"))
 
-                    request.session['email'] = ""
+                    request.session[settings.USERNAME_FIELD] = ""
                     args = {}
-                    args['email'] = form.cleaned_data['email'].lower()
+                    args[settings.USERNAME_FIELD] = form.cleaned_data[settings.USERNAME_FIELD].lower()
                     return HttpResponseRedirect("/accounts/learn/0/", email)
 
                     # messages.error(request, "You are not recognized.")
@@ -330,33 +409,43 @@ def sms_code(request):
                 if settings.DEBUG:
                     print("dropping out of valid form")
                     print("Status:", status)
-                    print("email: %s" % email)
+                    print("%s: %s" % (settings.USERNAME_FIELD, key_field ))
                     # Change the form and move to login
 
-            form = AuthenticationForm(initial={'email': email})
+            form = AuthenticationForm(initial={settings.USERNAME_FIELD: key_field})
             args = {}
             args['form'] = form
             return HttpResponseRedirect(reverse('accounts:login'), args)
         else:
             if settings.DEBUG:
                 print("invalid form")
-            form.email = email
+            if settings.USERNAME_FIELD == "user":
+                form.user = key_field
+            else:
+                form.email = key_field
 
             return render_to_response('accounts/smscode.html',
                                       RequestContext(request,
                                                      {'form': form}))
     else:
-        if 'email' in request.session:
-            if request.session['email'] != "":
-                email = request.session['email']
+        if settings.USERNAME_FIELD in request.session:
+            if request.session[settings.USERNAME_FIELD] != "":
+                key_field = request.session[settings.USERNAME_FIELD]
             else:
-                email = ""
+                key_field = ""
         else:
-            email = ""
+            key_field = ""
+
         if settings.DEBUG:
-            print("setting up the POST in sms_code [", email, "]")
-        form = SMSCodeForm(initial={'email': email, })
-        form.email = email
+            print("setting up the POST in sms_code [",
+                  settings.USERNAME_FIELD, "]",
+                  ":",
+                  key_field)
+        form = SMSCodeForm(initial={settings.USERNAME_FIELD: key_field,})
+        if settings.USERNAME_FIELD == "user":
+            form.user = key_field
+        else:
+            form.email = key_field
         if settings.DEBUG:
             # print("form email", form.email)
             print("In the sms_code.get")
@@ -365,4 +454,5 @@ def sms_code(request):
         #print(form)
         print("Dropping to render_to_response in sms_code")
     return render_to_response('accounts/smscode.html', {'form': form},
+
                               RequestContext(request))

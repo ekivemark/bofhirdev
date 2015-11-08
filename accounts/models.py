@@ -58,31 +58,32 @@ ACTIVITY_NOTIFY_CHOICES = (('N', "No Notifications"),
 
 # class Application(models.Model):
 # @login_required()
-class Application(AbstractApplication):
-    # Application keys
-    # owner = models.ForeignKey(settings.AUTH_USER_MODEL,
-    #                           related_name='+',
-    #                           blank=True,
-    #                           null=True,
-    #                           )
-
-    valid_until = models.DateTimeField(editable=False)
-    # editable=False to hide in admin
-
-    def save(self):
-        d = timedelta(days=365)
-
-        # only add 365 days if it's the first time the model is saved
-        if not self.id:
-            self.mydate = datetime.now() + d
-            super(MyModel, self).save()
-
-    def get_absolute_url(self):
-        return reverse('accounts:application_detail', args=[str(self.pk)])
+# class Application(AbstractApplication):
+#     # Application keys
+#     # owner = models.ForeignKey(settings.AUTH_USER_MODEL,
+#     #                           related_name='+',
+#     #                           blank=True,
+#     #                           null=True,
+#     #                           )
+#
+#     valid_until = models.DateTimeField(editable=False)
+#     # editable=False to hide in admin
+#
+#     def save(self):
+#         d = timedelta(days=365)
+#
+#         # only add 365 days if it's the first time the model is saved
+#         if not self.id:
+#             self.mydate = datetime.now() + d
+#             super(MyModel, self).save()
+#
+#     def get_absolute_url(self):
+#         return reverse('accounts:application_detail', args=[str(self.pk)])
 
 
 class UserManager(BaseUserManager):
     def create_user(self,
+                    user,
                     email,
                     first_name,
                     last_name,
@@ -90,12 +91,18 @@ class UserManager(BaseUserManager):
         """
         Creates and saves a User with the given email and password.
         """
+        if not user:
+            raise ValueError('The Username must be unique')
+
         if not email:
             raise ValueError('Users must have a unique email address')
 
+        username = user.lower()
         email = self.normalize_email(email)
 
-        user = self.model(email=email,
+        # Set user to lowercase to avoid confusion
+        user = self.model(user=username,
+                          email=email,
                           first_name=first_name,
                           last_name=last_name,
                           )
@@ -103,12 +110,13 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, first_name, last_name,
+    def create_superuser(self, user, email, first_name, last_name,
                          password, **extra_fields):
         """
         Creates and saves a superuser with the given email and password.
         """
-        user = self.create_user(email,
+        user = self.create_user(user,
+                                email,
                                 password=password,
                                 first_name=first_name,
                                 last_name=last_name,
@@ -119,7 +127,8 @@ class UserManager(BaseUserManager):
         user.is_staff = True
         user.save(using=self._db)
         if settings.DEBUG == True:
-            print("%s, active=%s,admin=%s, %s" % (user.email,
+            print("%s, active=%s,admin=%s, %s" % (user.user,
+                                                  user.email,
                                                   user.is_active,
                                                   user.is_admin,
                                                   user.password))
@@ -130,6 +139,8 @@ class User(AbstractBaseUser):
     """
     Replacing the base user model - switch to using email as username
     """
+    user = models.CharField(verbose_name='User name', max_length=50,
+                            unique=True, help_text='Use lower case with no spaces')
     email = models.EmailField(verbose_name='email address',
                               max_length=255,
                               unique=True,
@@ -167,8 +178,8 @@ class User(AbstractBaseUser):
 
     objects = UserManager()
 
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['first_name', 'last_name', ]
+    USERNAME_FIELD = 'user'
+    REQUIRED_FIELDS = ['first_name', 'last_name', 'email' ]
 
     def get_full_name(self):
         # The user is identified by their email address
@@ -178,8 +189,11 @@ class User(AbstractBaseUser):
         # The user is identified by their email address
         return self.email
 
-    # def __str__(self):              # __unicode__ on Python 2
-    #    return self.email
+    def __str__(self):              # __unicode__ on Python 2
+       return self.user
+
+    def get_user(self):
+        return self.user
 
     def has_perm(self, perm, obj=None):
         "Does the user have a specific permission?"

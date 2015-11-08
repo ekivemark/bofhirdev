@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block pretitle %}Add Your Applications{% endblock %}
+{% block extra_head %}{% endblock %}
+
+{% block pagename %}My Applications{% endblock %}
+{% block breadcrumbs %}
+    <div class="container">
+        <ul class="breadcrumb">
+            <li><a href="{% url 'home' %}">Home</a></li>
+            <li><a href="{% url 'accounts:manage_account' %}">Dashboard</a></li>
+            <li><a href="{% url 'appmgmt:organization_view' %}">MyOrganization</a></li>
+            <li class="active">My Applications</li>
+        </ul>
+    </div>
+
+{% endblock %}
+{% block content %}
+
+
+    {% for application in object_list %}
+        <div class="container col-lg-12 well">
+
+            <h2><img src="{{ MEDIA_URL }}{{ application.logo }}"
+                     width="50" height="50"> {{ application.name }}&nbsp;
+            <a href="{% url "appmgmt:application_update" pk=application.id %}"
+                    class="btn btn-success">
+                    <i class="fa fa-pencil-square-o fa-1x"></i>
+                {% trans 'Edit' %}</a>
+            </h2>
+            <li>Owner: {{ request.user }}
+            </li>
+            <li>Terms Agreed:
+                {% if application.agree %}YES&nbsp;
+                (Version: {%  if application.agree_version %}:
+                    {{ application.agree_date }}{% endif %})
+                {% else %}no
+                {% endif %}
+            <li>
+                Client_Id: <div
+style="width:660px;
+min-height:19px;
+height:auto!important;
+color:darkred; padding: 1%; background-color: ivory;
+font-size: 18px;
+font-weight: normal;
+word-wrap: break-word;
+text-align: left" >{{ application.client_id }}</div>
+            </li>
+            <li>
+                Client Secret: <div
+style="width:600px;
+min-height:19px;
+height:auto!important;
+color:darkgreen; padding: 1%; background-color: ivory;
+font-size: 18px;
+font-weight: normal;
+word-wrap: break-word;
+text-align: left" >{{ application.client_secret }}</div>
+            </li>
+            <li>
+                Redirect URL(s): {{ application.redirect_uris }}
+            </li>
+
+        </div>
+    {%  endfor %}
+
+{% endblock %}

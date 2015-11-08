@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block pretitle %}Editing {{ application }}{% endblock %}
+{% block extra_head %}
+
+{% endblock %}
+
+{% block pagename%}{% if application.logo %}<img src="{{ MEDIA_URL }}{{ application.logo }}" width="50" height="50">{% endif %} Editing {{ application }}{% endblock %}
+{% block breadcrumbs %}
+    <div class="container">
+        <ul class="breadcrumb">
+            <li><a href="{% url 'home' %}">Home</a></li>
+            <li><a href="{% url 'accounts:manage_account' %}">Dashboard</a></li>
+
+            <li><a href="{% url 'appmgmt:application_view' %}" >MyApplication</a></li>
+
+        </ul>
+    </div>
+
+{% endblock %}
+{% block content %}
+
+
+    <div class="container col-lg-12 well">
+        <form method="post" action="" xmlns="http://www.w3.org/1999/html">
+            {% csrf_token %}
+            <table>
+                <tr>
+                    <td>
+                        {{ form.as_p }}
+
+
+
+                        <a href="{% url "appmgmt:application_view" %}"><input
+                                type="button" class="btn-danger"
+                                value="Cancel"/></a>
+
+                        <input class="btn-success btn-lg" type="submit"
+                               value="Save"/>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+    <h3>Other Fields</h3>
+    <div class="container col-lg-10 well">
+
+        <table>
+        <tr>
+
+        </tr>
+                       <tr>Terms Agreed:
+                {% if application.agree %}YES&nbsp;
+                (Version: {%  if application.agree_version %}:
+                    {{ application.agree_date }}{% endif %})
+                {% else %}no
+                {% endif %}
+            </tr>
+            <tr>
+                Client_Id: <div
+style="width:660px;
+min-height:19px;
+height:auto!important;
+color:darkred; padding: 1%; background-color: ivory;
+font-size: 18px;
+font-weight: normal;
+word-wrap: break-word;
+text-align: left" >{{ application.client_id }}</div>
+            </tr>
+            <tr>
+                Client Secret: <div
+style="width:600px;
+min-height:19px;
+height:auto!important;
+color:darkgreen; padding: 1%; background-color: ivory;
+font-size: 18px;
+font-weight: normal;
+word-wrap: break-word;
+text-align: left" >{{ application.client_secret }}</div>
+            </tr>
+            <tr>
+                Redirect URL(s): {{ application.redirect_uris }}
+            </tr>
+
+
+        </table>
+
+    </div>
+
+{% endblock %}

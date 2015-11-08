@@ -3,13 +3,11 @@
     <div class="container-fluid">
         <div class="row-fluid">
             <div class="col-lg-10">
-                 <h2>My Profile</h2>
-            </div>
-             <div class="col-lg-2 align-right">
-                <a href="{% url "accounts:user_edit" %}"
+                 <h2>My Profile <a href="{% url "accounts:user_edit" %}"
                    class="btn btn-success">
-                    <i class="fa fa-pencil-square-o fa-1x"></i> {% trans 'Edit' %}</a>
+                    <i class="fa fa-pencil-square-o fa-1x"></i> {% trans 'Edit' %}</a></h2>
             </div>
+
         </div>
     </div>
 
@@ -50,7 +48,9 @@
                     </p>
                     <p><a href="{% url 'accounts:verify_phone' %}"
                        class="btn btn-success">
-                        <i class="fa fa-mobile fa-2x"></i> {% trans ' Verify My Phone' %}
+                        <i class="fa fa-mobile fa-2x"></i>
+                        {% if user.verified_mobile %}Re-Verify My Phone
+                        {% else %}Verify My Phone{% endif %}
                         </a>
                     </p>
 

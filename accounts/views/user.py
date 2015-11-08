@@ -84,20 +84,29 @@ def user_edit(request):
 
     u = User.objects.get(email=request.user.email)
     if settings.DEBUG:
-        print("User returned:", u, "[", u.first_name, " ", u.last_name,
-              "]")
+        print("User returned:", u.user, "/", u.email, "[", u.first_name, " ", u.last_name,
+              u.mobile, "]")
+    prior_mobile = u.mobile
 
     form = User_EditForm(data=request.POST or None, instance=u)
 
     if request.POST:
-        form = User_EditForm(request.POST)
+        form = User_EditForm(request.POST, instance=u)
         if form.is_valid():
             # form.save()
             if settings.DEBUG:
                 print("Form is valid - current record:", u)
+                # print("Phone:",u.mobile, "/", form.cleaned_data['mobile'])
 
+            u.user = form.cleaned_data['user']
+            u.email = form.cleaned_data['email']
             u.first_name = form.cleaned_data['first_name']
             u.last_name = form.cleaned_data['last_name']
+            if form.cleaned_data['mobile'] != prior_mobile:
+                # if number changes we un-verify phone
+                print("Number has changed - unverify:", u.mobile)
+                u.verified_mobile = False
+
             u.mobile = form.cleaned_data['mobile']
             u.carrier = form.cleaned_data['carrier']
             u.notify_activity = form.cleaned_data['notify_activity']
@@ -130,7 +139,9 @@ def user_edit(request):
             print("in the get with User:", u.first_name, " ", u.last_name,
                   " ", u.mobile)
         form = User_EditForm(
-            initial={'first_name': u.first_name,
+            initial={'user': u.user,
+                     'email': u.email,
+                     'first_name': u.first_name,
                      'last_name': u.last_name,
                      'mobile': u.mobile,
                      'carrier': u.carrier,
