@@ -66,6 +66,19 @@
                     </td>
                 </tr>
                 <tr>
+                    <td>&nbsp;</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>
+                        <a href="{% url "appmgmt:application_update_secret" pk=application.id %}"
+                    class="btn btn-success">
+                    <i class="fa fa-pencil-square-o fa-1x"></i>
+                {% trans 'Update Id and Secret' %}</a>
+                    </td>
+                    <td></td>
+                </tr>
+                <tr>
                     <td>
                         Client_Id:
                     </td>

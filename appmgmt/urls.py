@@ -12,7 +12,8 @@ from django.conf.urls import patterns, include, url
 from django.core.urlresolvers import reverse_lazy
 
 from appmgmt.views.application import (MyApplicationListView,
-                                       MyApplicationUpdateView)
+                                       MyApplicationUpdateView,
+                                       Application_Update_Secret)
 from appmgmt.views.organization import (MyOrganizationListView,
                                         MyOrganizationUpdateView,
                                         MyOrganizationCreate,
@@ -45,6 +46,9 @@ urlpatterns = patterns('',
                        url(r'^updateapplication/(?P<pk>[0-9]+)/$',
                            MyApplicationUpdateView.as_view(success_url=reverse_lazy('appmgmt:application_view')),
                            name='application_update'),
+                       url(r'^updateapplicationsecret/(?P<pk>[0-9]+)/$',
+                           'appmgmt.views.application.Application_Update_Secret',
+                           name='application_update_secret'),
 
                        url(r'^trustcheck/(?P<requester_email>.+)/(?P<bundle>.+)/(?P<domain>.+)/(?P<owner_email>.+)$',
                            'appmgmt.views.trust.BaseTrust',

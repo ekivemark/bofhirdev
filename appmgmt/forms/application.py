@@ -30,3 +30,22 @@ class ApplicationForm(forms.ModelForm):
         obj.owner = self.owner
         commit and obj.save()
         return obj
+
+
+class Application_Secret_Form(forms.ModelForm):
+    """
+    Model  form for BBApplication with request.user override
+    """
+    class Meta:
+        model = BBApplication
+        fields = ['client_id', 'client_secret', ]
+
+    def __init__(self, *args, **kwargs):
+        # self.owner = kwargs['instance']['owner']
+        super(Application_Secret_Form, self).__init__(*args, **kwargs)
+
+    def save(self, commit=True):
+        obj = super(Application_SecreT_Form, self).save(False)
+        obj.owner = self.owner
+        commit and obj.save()
+        return obj

@@ -30,13 +30,16 @@ from appmgmt.models import Organization
 # We need an app management set of transactions here
 
 BUNDLE_INFO = {
-    'TEST': {'endpoint': "http://localhost:8000/appmanagement/trust_test/",
+    'TEST': {'bundle_ref': "T001",
+             'endpoint': "http://localhost:8000/appmanagement/trust_test/",
              'client_id': "1234567890",
              'token': 'x12345678'},
-    'NATE': {'endpoint': "https://api.nate.org/trust_test/",
+    'NATE': {'bundle_ref': "N001",
+             'endpoint': "https://api.nate.org/trust_test/",
              'client_id': "1234567890",
              'token': 'x12345678'},
-    'DIRECTTRUST': {'endpoint': "https://api.directtrust.org/trust_test/",
+    'DIRECTTRUST': {'bundle_ref': "DT001",
+             'endpoint': "https://api.directtrust.org/trust_test/",
              'client_id': "9876543210",
              'token': 'x87654321'}
 }
@@ -74,6 +77,7 @@ def BaseTrust(request, requester_email,
         return {'trust_info': trust_info, 'valid': valid}
     else:
         api_call = BUNDLE_INFO[bundle.upper()]
+        bundle_id = api_call['bundle_ref']
         if settings.DEBUG:
             print("We got the bundle", api_call)
     # We have a valid bundle dictionary
@@ -81,6 +85,7 @@ def BaseTrust(request, requester_email,
 
     Base_Trust = {
                  "requested_by": requester_email,
+                 "bundle": bundle_id,
                  "domain": domain,
                  "owner": owner_email
     }

@@ -7,12 +7,21 @@ Created: 11/5/15 10:50 PM
 
 """
 from django.conf import settings
+from django.contrib import messages
+from django.core.urlresolvers import reverse_lazy
+from django.http import HttpResponseRedirect
+from django.shortcuts import render_to_response
+from django.template import RequestContext
 from django.views.generic import (DetailView,
                                   UpdateView)
 from django.views.generic.edit import CreateView
 from django.views.generic.list import ListView
 
-from appmgmt.forms.application import ApplicationForm
+from oauth2_provider.generators import (generate_client_id,
+                                        generate_client_secret)
+
+from appmgmt.forms.application import (ApplicationForm,
+                                       Application_Secret_Form)
 from appmgmt.models import BBApplication
 
 
@@ -81,4 +90,38 @@ class MyApplicationCreate(CreateView):
 # Organization Update
 
 
+def Application_Update_Secret(request, pk):
+    """
+    Replace client_id and client_secret
+
+    :param request:
+    :param pk:
+    :return:
+    """
+    if request.method == 'POST':
+        a=BBApplication.objects.get(pk=pk)
+        form = Application_Secret_Form(request.POST, instance=a)
+
+        if form.is_valid():
+
+            a.client_id = generate_client_id()
+            a.client_secret = generate_client_secret()
+
+            if settings.DEBUG:
+                print("Id:", a.client_id)
+                print("Secret:", a.client_secret)
+
+            a.save()
+            messages.success(request,"Client Id and Secret updated")
+            return HttpResponseRedirect(reverse_lazy('appmgmt:application_view'))
+        else:
+            if settings.DEBUG:
+                print("form has a problem")
+    else:
+        a=BBApplication.objects.get(pk=pk)
+        if settings.DEBUG:
+            print("BBAplication:", a)
+        form = Application_Secret_Form(instance=a)
+    return render_to_response('appmgmt/application_secret_form.html',
+                              RequestContext(request,{'form': form, 'application': a,}))
 
