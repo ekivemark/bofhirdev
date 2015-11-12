@@ -22,8 +22,11 @@ class TrustForm(forms.Form):
     """
 
     trust_bundle = forms.ChoiceField(choices=TRUST_BUNDLE_CHOICE)
-    trust_domain = forms.CharField(max_length=100,label="Trusted Application Domain")
+    trust_domain = forms.CharField(max_length=100,
+                                   label="Trusted Application Domain")
     owner_email = forms.EmailField(label="Trusted Application Owner Email")
+    shared_secret = forms.CharField(max_length=40,
+                                    label="Trust Bundle Entity Secret")
 
     # class Meta:
     #     fields = ['trust_bundle', 'trust_domain', 'administrator_email']

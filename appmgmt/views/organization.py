@@ -45,7 +45,8 @@ class MyOrganizationListView(ListView):
         qs = super(MyOrganizationListView, self).get_queryset()
 
         if settings.DEBUG:
-            print(qs.filter(owner=self.request.user).values())
+            result = qs.filter(owner=self.request.user).values()
+            print("qs filter:", result)
             print("Developers:", qs[0].developers)
 
         return qs.filter(owner=self.request.user).values()

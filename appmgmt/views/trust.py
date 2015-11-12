@@ -47,6 +47,7 @@ BUNDLE_INFO = {
 @login_required()
 def BaseTrust(request, requester_email,
               bundle, domain, owner_email,
+              shared_secret="",
               internal_call=False):
     """
 
@@ -61,6 +62,7 @@ def BaseTrust(request, requester_email,
     :param bundle:
     :param domain:
     :param owner_email:
+    :param shared_secret:
     :return:
     """
 
@@ -87,7 +89,8 @@ def BaseTrust(request, requester_email,
                  "requested_by": requester_email,
                  "bundle": bundle_id,
                  "domain": domain,
-                 "owner": owner_email
+                 "owner": owner_email,
+                 "shared_secret": shared_secret,
     }
 
     if settings.DEBUG:
@@ -163,6 +166,7 @@ def TrustData(request):
                                   form.cleaned_data['trust_bundle'],
                                   form.cleaned_data['trust_domain'],
                                   form.cleaned_data['owner_email'],
+                                  form.cleaned_data['shared_secret'],
                                   internal_call=True)
 
             if settings.DEBUG:
@@ -181,7 +185,7 @@ def TrustData(request):
             if settings.DEBUG:
                 print("Org:", org, ":", org.trusted)
 
-            return HttpResponseRedirect(reverse('appmgmt:organization-view'))
+            return HttpResponseRedirect(reverse('appmgmt:organization_view'))
     else:
         # t=u.objects.get(email=request.user)
         t = {'trust_bundle': "",

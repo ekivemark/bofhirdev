@@ -13,6 +13,8 @@ from django.conf import settings
 
 from appmgmt.models import BBApplication
 
+BOOLEAN_CHOICES = (('1', 'Update'), ('0', 'Keep unchanged'))
+
 class ApplicationForm(forms.ModelForm):
     """
     Model  form for BBApplication with request.user override
@@ -45,7 +47,18 @@ class Application_Secret_Form(forms.ModelForm):
         super(Application_Secret_Form, self).__init__(*args, **kwargs)
 
     def save(self, commit=True):
-        obj = super(Application_SecreT_Form, self).save(False)
+        obj = super(Application_Secret_Form, self).save(False)
         obj.owner = self.owner
         commit and obj.save()
         return obj
+
+class Application_Secret(forms.Form):
+    """
+    Confirm the update of Client_Id and Client_Secret
+    """
+
+    confirm = forms.ChoiceField(choices = BOOLEAN_CHOICES,
+                                widget = forms.RadioSelect,
+                                required=False,
+                                help_text="Select 'Update' then click"
+                                          " 'Replace' to change the Id and Secret")

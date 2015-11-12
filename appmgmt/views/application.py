@@ -21,7 +21,8 @@ from oauth2_provider.generators import (generate_client_id,
                                         generate_client_secret)
 
 from appmgmt.forms.application import (ApplicationForm,
-                                       Application_Secret_Form)
+                                       Application_Secret_Form,
+                                       Application_Secret)
 from appmgmt.models import BBApplication
 
 
@@ -100,28 +101,31 @@ def Application_Update_Secret(request, pk):
     """
     if request.method == 'POST':
         a=BBApplication.objects.get(pk=pk)
-        form = Application_Secret_Form(request.POST, instance=a)
+        form = Application_Secret(request.POST)
 
         if form.is_valid():
-
-            a.client_id = generate_client_id()
-            a.client_secret = generate_client_secret()
+            if form.cleaned_data['confirm'] == '1':
+                a.client_id = generate_client_id()
+                a.client_secret = generate_client_secret()
+                a.save()
+                messages.success(request,"Client Id and Secret updated")
 
             if settings.DEBUG:
+                print("Confirm:", form.cleaned_data['confirm'])
                 print("Id:", a.client_id)
                 print("Secret:", a.client_secret)
 
-            a.save()
-            messages.success(request,"Client Id and Secret updated")
             return HttpResponseRedirect(reverse_lazy('appmgmt:application_view'))
+
         else:
             if settings.DEBUG:
                 print("form has a problem")
     else:
         a=BBApplication.objects.get(pk=pk)
         if settings.DEBUG:
-            print("BBAplication:", a)
-        form = Application_Secret_Form(instance=a)
+            print("BBApplication:", a)
+
+        form = Application_Secret(initial={'confirm': '0'})
     return render_to_response('appmgmt/application_secret_form.html',
                               RequestContext(request,{'form': form, 'application': a,}))
 
