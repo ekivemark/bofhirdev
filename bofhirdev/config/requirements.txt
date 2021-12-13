@@ -27,7 +27,7 @@ httplib2==0.9.1
 jsonfield==1.0.3
 ldap3==0.9.8.7
 logilab-common==1.0.2
-lxml==3.4.4
+lxml==4.6.5
 Markdown==2.requests6.2
 MechanicalSoup==0.3.1
 oauth2==1.9.0.post1
